@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111116">
+<meta name="description" content="A pocket guitar riff recorder with adjustable recording tone.">
+<link rel="manifest" href="manifest.json">
+<title>RiffLab</title>
+<style>
+:root{color-scheme:dark;--bg:#101015;--panel:#1b1b23;--panel2:#24242e;--purple:#a78bfa;--text:#f5f3ff;--muted:#aaa7ba;--red:#ff5b72}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#242036 0,#101015 44%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{width:min(760px,100%);margin:auto;padding:22px 16px 40px}
+header{display:flex;align-items:center;gap:12px;margin:8px 0 22px}.logo{width:48px;height:48px;border-radius:16px;background:#a78bfa;color:#16121f;display:grid;place-items:center;font-size:27px;font-weight:900}
+h1{font-size:25px;letter-spacing:1.8px;margin:0}.sub{font-size:11px;letter-spacing:2px;color:var(--muted);margin-top:3px}
+.pill{margin-left:auto;border:1px solid #454052;color:#d9d0ff;border-radius:999px;padding:7px 10px;font-size:11px}
+.card{background:rgba(27,27,35,.94);border:1px solid #34323f;border-radius:22px;padding:17px;margin:13px 0;box-shadow:0 10px 35px #0002}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.muted{color:var(--muted)}.small{font-size:12px}.section-title{font-weight:750;font-size:15px;margin:0 0 13px}
+input,select,button{font:inherit}input[type=text],select{background:#111117;color:var(--text);border:1px solid #454052;border-radius:12px;padding:12px;width:100%;min-width:0}
+button{border:0;border-radius:14px;padding:13px 15px;font-weight:750;cursor:pointer;color:#f9f7ff;background:#353342}
+button:disabled{opacity:.38;cursor:not-allowed}.primary{background:var(--purple);color:#171020}.record{background:var(--red);color:#210910}.stop{background:#393644}.secondary{background:#302d3d}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.status{font-size:12px;color:var(--muted);min-height:18px;margin-top:10px}
+.meter{height:76px;display:flex;align-items:center;gap:3px;overflow:hidden;padding:8px 0}.bar{flex:1;min-width:2px;max-width:9px;border-radius:6px;background:linear-gradient(0deg,#8b5cf6,#d8b4fe);height:12%}
+label{display:block;font-size:13px;color:#dedbea;margin:14px 0 7px}.range-row{display:flex;align-items:center;gap:10px}.range-row input{flex:1;accent-color:var(--purple)}.value{font-size:12px;color:#d8ccff;min-width:45px;text-align:right}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.preset{padding:10px 6px;font-size:12px}.preset.active{background:#a78bfa;color:#171020}
+.clip{background:#121218;border:1px solid #34323f;border-radius:15px;padding:12px;margin-top:10px}.clip-name{font-weight:700;overflow-wrap:anywhere}.clip audio{width:100%;height:38px;margin-top:9px}.clip-actions{display:flex;gap:7px;margin-top:8px}.clip-actions button{padding:9px 10px;font-size:12px;flex:1}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.warning{color:#f6c7d0}
+footer{text-align:center;color:#777386;font-size:11px;padding:16px}
+@media(min-width:620px){.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two-col .card{margin:0}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo">R</div><div><h1>RIFFLAB</h1><div class="sub">POCKET GUITAR STUDIO</div></div><div class="pill">BETA 0.1</div></header>
+
+<section class="card">
+ <div class="row between"><div><div class="muted small">READY TO CAPTURE</div><h2 style="margin:4px 0 0;font-size:20px">Record a riff</h2></div><div id="recBadge" class="pill">STANDBY</div></div>
+ <label for="clipName">Recording name</label><input id="clipName" type="text" maxlength="70" value="New riff 001" autocomplete="off">
+ <div class="meter" id="meter" aria-label="Microphone level meter"></div>
+ <div class="row between small muted"><span id="timer">00:00</span><span id="levelText">Input level: --</span></div>
+ <div class="controls"><button id="startBtn" class="record">● Record</button><button id="stopBtn" class="stop" disabled>■ Stop & save</button></div>
+ <div id="status" class="status">Tap Record and allow microphone access.</div>
+</section>
+
+<div class="two-col">
+<section class="card">
+ <h3 class="section-title">Tone controls</h3>
+ <div class="presets">
+  <button class="preset active" data-preset="clean">Clean</button><button class="preset" data-preset="crunch">Crunch</button><button class="preset" data-preset="heavy">Heavy</button>
+ </div>
+ <label for="gain">Recording level</label><div class="range-row"><input id="gain" type="range" min="0.25" max="3" step="0.05" value="1"><span id="gainVal" class="value">100%</span></div>
+ <label for="drive">Distortion / drive</label><div class="range-row"><input id="drive" type="range" min="0" max="80" step="1" value="0"><span id="driveVal" class="value">0%</span></div>
+ <label for="bass">Bass</label><div class="range-row"><input id="bass" type="range" min="-12" max="12" step="1" value="0"><span id="bassVal" class="value">0 dB</span></div>
+ <label for="treble">Treble</label><div class="range-row"><input id="treble" type="range" min="-12" max="12" step="1" value="0"><span id="trebleVal" class="value">0 dB</span></div>
+ <p class="note">Tone controls are applied to the saved recording. This first version does not provide zero-latency live amp monitoring.</p>
+</section>
+
+<section class="card">
+ <h3 class="section-title">Recording settings</h3>
+ <label for="quality">Recording quality</label>
+ <select id="quality"><option value="128000">Standard · 128 kbps</option><option value="192000" selected>High · 192 kbps</option><option value="256000">Very high · 256 kbps</option></select>
+ <label for="presetName">Current tone preset</label><input id="presetName" type="text" value="Clean" readonly>
+ <div style="height:12px"></div>
+ <button id="resetBtn" class="secondary" style="width:100%">Reset tone settings</button>
+ <p class="note" style="margin-top:13px">For best results, use headphones or place your phone near the amp. A USB-C audio interface may work, depending on Android and browser input support.</p>
+</section>
+</div>
+
+<section class="card">
+ <div class="row between"><h3 class="section-title" style="margin:0">Saved riffs</h3><span id="clipCount" class="muted small">0 clips</span></div>
+ <div id="clips"><p class="note">Your recordings will appear here. Download clips you want to keep; browser storage can be cleared by Android.</p></div>
+</section>
+<footer>RIFFLAB · made for riff ideas, not a replacement for a full DAW</footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const meter = $('meter');
+for(let i=0;i<38;i++){const b=document.createElement('div');b.className='bar';meter.appendChild(b)}
+const bars=[...meter.children];
+let audioCtx=null, source=null, gainNode=null, bassNode=null, trebleNode=null, shaper=null, analyser=null, destination=null, mediaRecorder=null, chunks=[], stream=null, timerLoop=null, startedAt=0, clips=[], animFrame=null, recording=false, currentPreset='clean';
+function status(msg, bad=false){$('status').textContent=msg;$('status').className='status'+(bad?' warning':'')}
+function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function makeCurve(amount){const n=44100, curve=new Float32Array(n);const k=amount*2;for(let i=0;i<n;i++){const x=i*2/n-1;curve[i]=amount===0?x:((3+k)*x*20*Math.PI/180)/(Math.PI+k*Math.abs(x));}return curve}
+async function setupAudio(){
+ if(audioCtx) return;
+ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ source=audioCtx.createMediaStreamSource(stream);
+ gainNode=audioCtx.createGain(); bassNode=audioCtx.createBiquadFilter();bassNode.type='lowshelf';bassNode.frequency.value=160;
+ trebleNode=audioCtx.createBiquadFilter();trebleNode.type='highshelf';trebleNode.frequency.value=3500;
+ shaper=audioCtx.createWaveShaper();shaper.oversample='4x';
+ analyser=audioCtx.createAnalyser();analyser.fftSize=128;
+ destination=audioCtx.createMediaStreamDestination();
+ source.connect(gainNode);gainNode.connect(bassNode);bassNode.connect(trebleNode);trebleNode.connect(shaper);shaper.connect(analyser);analyser.connect(destination);
+ applyTone();
+}
+function applyTone(){
+ if(!gainNode)return;
+ gainNode.gain.value=Number($('gain').value);
+ bassNode.gain.value=Number($('bass').value);
+ trebleNode.gain.value=Number($('treble').value);
+ shaper.curve=makeCurve(Number($('drive').value)/80);
+ $('gainVal').textContent=Math.round(Number($('gain').value)*100)+'%';
+ $('driveVal').textContent=$('drive').value+'%';
+ $('bassVal').textContent=$('bass').value+' dB';
+ $('trebleVal').textContent=$('treble').value+' dB';
+}
+['gain','drive','bass','treble'].forEach(id=>$(id).addEventListener('input',applyTone));
+function selectPreset(name){
+ currentPreset=name;
+ const p={clean:{gain:1,drive:0,bass:0,treble:0},crunch:{gain:1.1,drive:22,bass:2,treble:2},heavy:{gain:1.15,drive:52,bass:4,treble:1}}[name];
+ for(const k of Object.keys(p))$(k).value=p[k];
+ $('presetName').value=name[0].toUpperCase()+name.slice(1);
+ document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));
+ applyTone();
+}
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>selectPreset(b.dataset.preset)));
+$('resetBtn').addEventListener('click',()=>selectPreset('clean'));
+function animateMeter(){
+ if(!analyser)return;
+ const data=new Uint8Array(analyser.frequencyBinCount);
+ const tick=()=>{if(!analyser)return;analyser.getByteTimeDomainData(data);let sum=0;for(const v of data){const x=(v-128)/128;sum+=x*x}const rms=Math.sqrt(sum/data.length);const level=Math.min(1,rms*5);
+ bars.forEach((b,i)=>{const wave=Math.abs(Math.sin(i*.55+performance.now()/210));const h=Math.max(7,Math.min(100,(level*65+wave*level*35)));b.style.height=h+'%';b.style.opacity=String(.3+level*.7)});
+ $('levelText').textContent='Input level: '+Math.round(level*100)+'%';
+ animFrame=requestAnimationFrame(tick)};
+ tick();
+}
+function stopMeter(){if(animFrame)cancelAnimationFrame(animFrame);animFrame=null;bars.forEach(b=>{b.style.height='8%';b.style.opacity='.7'});$('levelText').textContent='Input level: --'}
+$('startBtn').addEventListener('click',async()=>{
+ if(recording)return;
+ try{
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)throw new Error('This browser does not support microphone recording. Open the app in Chrome over HTTPS.');
+  await setupAudio();await audioCtx.resume();
+  chunks=[];
+  let options={};
+  const mimeTypes=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+  const supported=mimeTypes.find(t=>MediaRecorder.isTypeSupported(t));
+  if(supported)options.mimeType=supported;
+  options.audioBitsPerSecond=Number($('quality').value);
+  mediaRecorder=new MediaRecorder(destination.stream,options);
+  mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  mediaRecorder.onerror=()=>status('Recording error. Try again or reload the app.',true);
+  mediaRecorder.onstop=()=>{
+   const type=mediaRecorder.mimeType||'audio/webm';
+   const blob=new Blob(chunks,{type});
+   if(blob.size){
+    const url=URL.createObjectURL(blob);
+    const name=$('clipName').value.trim()||('Riff '+(clips.length+1));
+    clips.unshift({id:Date.now(),name,blob,url,type});
+    renderClips();status('Saved "'+name+'". Download it to keep a copy.');
+   }else status('No audio was captured. Check microphone permission and try again.',true);
+   recording=false;$('recBadge').textContent='STANDBY';$('recBadge').style.color='#d9d0ff';$('startBtn').disabled=false;$('stopBtn').disabled=true;
+   clearInterval(timerLoop);$('timer').textContent='00:00';
+   stopMeter();
+  };
+  mediaRecorder.start(250);
+  recording=true;startedAt=Date.now();$('recBadge').textContent='● REC';$('recBadge').style.color='#ff8b9c';
+  $('startBtn').disabled=true;$('stopBtn').disabled=false;status('Recording processed audio. Keep this page open.');
+  timerLoop=setInterval(()=>$('timer').textContent=fmt((Date.now()-startedAt)/1000),250);
+  animateMeter();
+ }catch(e){status(e.message||'Could not start microphone. Check site permissions.',true)}
+});
+$('stopBtn').addEventListener('click',()=>{if(mediaRecorder&&recording)mediaRecorder.stop()});
+function renderClips(){
+ $('clipCount').textContent=clips.length+' clip'+(clips.length===1?'':'s');
+ const root=$('clips');root.innerHTML='';
+ if(!clips.length){root.innerHTML='<p class="note">Your recordings will appear here.</p>';return}
+ clips.forEach(c=>{
+  const box=document.createElement('div');box.className='clip';
+  const row=document.createElement('div');row.className='row between';
+  const title=document.createElement('div');title.className='clip-name';title.textContent=c.name;
+  const del=document.createElement('button');del.textContent='Delete';del.className='secondary';del.style.padding='7px 10px';del.style.fontSize='12px';
+  del.addEventListener('click',()=>{URL.revokeObjectURL(c.url);clips=clips.filter(x=>x.id!==c.id);renderClips()});
+  row.append(title,del);
+  const audio=document.createElement('audio');audio.controls=true;audio.src=c.url;audio.preload='metadata';
+  const actions=document.createElement('div');actions.className='clip-actions';
+  const dl=document.createElement('button');dl.className='primary';dl.textContent='Download audio';
+  dl.addEventListener('click',()=>{const a=document.createElement('a');a.href=c.url;a.download=safeName(c.name)+(c.type.includes('mp4')?'.mp4':'.webm');a.click()});
+  const rename=document.createElement('button');rename.className='secondary';rename.textContent='Rename';
+  rename.addEventListener('click',()=>{const n=prompt('Name this riff:',c.name);if(n&&n.trim()){c.name=n.trim().slice(0,70);renderClips()}});
+  actions.append(dl,rename);box.append(row,audio,actions);root.append(box);
+ });
+}
+function safeName(s){return s.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'riff'}
+window.addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());clips.forEach(c=>URL.revokeObjectURL(c.url))});
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
